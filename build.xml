@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="HelloWorld" default="help">
+
+	<!-- ============================================================== -->
+	<!-- =========================== USAGE ============================ -->
+	<!-- ============================================================== -->
+
+	<target name="help">
+		<java classname="org.apache.tools.ant.Main">
+			<arg value="-projecthelp" />
+			<arg value="-buildfile" />
+			<arg value="${ant.file}" />
+		</java>
+	</target>
+
+	<!-- ============================================================== -->
+	<!-- ======================== PROPERTIES ========================== -->
+	<!-- ============================================================== -->
+
+	<property file="build.properties" />
+
+	<property name="main.src.dir" location="src/main/java" description="sources files directory" />
+	<property name="main.res.dir" location="src/main/resources" description="resources files directory" />
+
+	<property name="test.src.dir" location="src/test/java" description="source test files directory" />
+	<property name="test.res.dir" location="src/test/resources" description="resources test files directory" />
+	
+	<property name="build.dir" location="build" description="building directory" />
+	<property name="classes.dir" location="${build.dir}/classes" />
+	<property name="jar.dir" location="${build.dir}/dist" />
+	<property name="tests.dir" location="${build.dir}/tests" />
+	<property name="report.dir"  value="${build.dir}/report"/>
+	<property name="doc.dir"  value="${build.dir}/doc"/>
+
+	<property name="main-class" value="it.ott8bre.ant.HelloWorld" />
+
+	<!-- ============================================================== -->
+	<!-- ======================== CLASSPATH =========================== -->
+	<!-- ============================================================== -->
+
+	<path id="application" location="${jar.dir}/${ant.project.name}.jar" />
+
+	<path id="main.classpath">
+		<fileset dir="${main.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<path id="test.classpath">
+		<fileset dir="${test.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- ============================================================== -->
+	<!-- ========================== CLEAN ============================= -->
+	<!-- ============================================================== -->
+
+	<target name="clean" description="--> clean the project built files">
+		<delete dir="${build.dir}" />
+	</target>
+
+
+	<!-- ============================================================== -->
+	<!-- ========================= COMPILE ============================ -->
+	<!-- ============================================================== -->
+
+	<target name="compile" description="--> compile the project">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${main.src.dir}" destdir="${classes.dir}" classpathref="main.classpath" />
+		<copy todir="${classes.dir}">
+			<fileset dir="${main.res.dir}" />
+		</copy>
+	</target>
+
+	<target name="compile-test" depends="compile" description="--> compile the project tests">
+		<mkdir dir="${tests.dir}" />
+		<javac srcdir="${test.src.dir}" destdir="${tests.dir}">
+			<classpath>
+				<path refid="test.classpath" />
+				<path location="${classes.dir}"/>
+			</classpath>
+		</javac>
+		<copy todir="${tests.dir}">
+			<fileset dir="${test.res.dir}" />
+		</copy>
+	</target>
+
+	<!-- ============================================================== -->
+	<!-- =========================== JARS ============================= -->
+	<!-- ============================================================== -->
+
+	<target name="jar" depends="compile-test" description="--> make a jar file for this project">
+		<mkdir dir="${jar.dir}" />
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-doc" description="--> make a jar file for javadoc of this project">
+		<mkdir dir="${doc.dir}" />
+		<javadoc
+				destdir="${doc.dir}"
+		        author="true"
+		        version="true"
+		        use="true"
+				classpathref="main.classpath"
+			windowtitle="${ant.project.name}">
+
+		    <packageset dir="${main.src.dir}" defaultexcludes="yes" />
+
+			<doctitle><![CDATA[<h1>${ant.project.name}</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; 2015 ${ant.project.name} All Rights Reserved.</i>]]></bottom>
+		  </javadoc>
+		<jar destfile="${jar.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
+	</target>
+
+	<target name="dist" depends="clean, jar, jar-doc" description="--> create distribution jar files" >
+		<copy todir="${jar.dir}/lib">
+			<fileset dir="${main.lib.dir}" includes="**/*.jar" />
+		</copy>		
+	</target>
+
+	<!-- ============================================================== -->
+	<!-- ============================ RUN ============================= -->
+	<!-- ============================================================== -->
+
+	<target name="run" depends="jar" description="--> run project jar">
+		<java fork="true" classname="${main-class}" dir="${build.dir}">
+			<classpath>
+				<path refid="main.classpath" />
+				<path refid="application" />
+			</classpath>
+		</java>
+	</target>
+
+	<!-- ============================================================== -->
+	<!-- ============================ TEST ============================ -->
+	<!-- ============================================================== -->
+
+	<target name="test" depends="jar" description="--> run tests">
+		<mkdir dir="${report.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes">
+			<classpath>
+				<path location="${tests.dir}" />
+				<path refid="main.classpath" />
+				<path refid="test.classpath" />
+				<path refid="application" />
+			</classpath>
+
+			<formatter type="plain"/>
+			<formatter type="xml"/>
+
+			<batchtest fork="yes" todir="${report.dir}">
+				<fileset dir="${test.src.dir}" includes="**/*Test*.java" />
+			</batchtest>
+		</junit>
+	</target>
+
+	<!-- ============================================================== -->
+	<!-- ============================ MAIN ============================ -->
+	<!-- ============================================================== -->
+
+	<target name="main" depends="dist,run" description="--> clean + tests + run"/>
+
+</project>
