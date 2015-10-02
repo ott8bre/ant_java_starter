@@ -1,9 +1,11 @@
 import it.ott8bre.ant.HelloWorld;
-import junit.framework.TestCase;
+import org.junit.*;
+import static org.junit.Assert.*;
 
-public class HelloWorldTest extends TestCase {
+public class HelloWorldTest {
 
+	@Test
 	public void testExample() throws Exception {
-		new HelloWorld();
+		assertEquals("Hello World", new HelloWorld().greet());
 	}
 }

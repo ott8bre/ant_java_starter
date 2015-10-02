@@ -17,6 +17,10 @@ public class HelloWorld {
      */
     public static void main(String[] args) {
         BasicConfigurator.configure();
-        logger.info("Hello World");          // the old SysO-statement
+        logger.info(new HelloWorld().greet());          // the old SysO-statement
+    }
+    
+    public String greet(){
+    	return "Hello World";
     }
 }

@@ -41,17 +41,16 @@
 	<path id="application" location="${jar.dir}/${ant.project.name}.jar" />
 
 	<path id="main.classpath">
-		<fileset dir="${main.lib.dir}">
-			<include name="**/*.jar" />
-		</fileset>
+		<pathelement path="${log4j.lib}" />
 	</path>
 
 	<path id="test.classpath">
-		<fileset dir="${test.lib.dir}">
-			<include name="**/*.jar" />
-		</fileset>
+        <path refid="main.classpath" />
+        <pathelement path="${classes.dir}" />
+        <pathelement path="${junit.lib}" />
+        <pathelement path="${hamcrest.lib}" />
 	</path>
-
+	
 	<!-- ============================================================== -->
 	<!-- ========================== CLEAN ============================= -->
 	<!-- ============================================================== -->
@@ -119,7 +118,7 @@
 
 	<target name="dist" depends="clean, jar, jar-doc" description="--> create distribution jar files" >
 		<copy todir="${jar.dir}/lib">
-			<fileset dir="${main.lib.dir}" includes="**/*.jar" />
+			<path refid="main.classpath" />
 		</copy>		
 	</target>
 
