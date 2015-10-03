@@ -113,10 +113,16 @@
 			<doctitle><![CDATA[<h1>${ant.project.name}</h1>]]></doctitle>
 			<bottom><![CDATA[<i>Copyright &#169; 2015 ${ant.project.name} All Rights Reserved.</i>]]></bottom>
 		  </javadoc>
+		<mkdir dir="${jar.dir}" />
 		<jar destfile="${jar.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
 	</target>
 
-	<target name="dist" depends="clean, test-report, jar-doc" description="--> create distribution jar files" >
+	<target name="jar-src" description="--> make a jar file for sources of this project">
+		<mkdir dir="${jar.dir}" />
+		<jar destfile="${jar.dir}/${ant.project.name}-sources.jar" basedir="${main.src.dir}" />	
+	</target>	
+	
+	<target name="dist" depends="clean, test-report, jar-doc, jar-src" description="--> create distribution jar files" >
 		<copy todir="${jar.dir}/lib">
 			<path refid="main.classpath" />
 		</copy>		
