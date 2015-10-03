@@ -116,7 +116,7 @@
 		<jar destfile="${jar.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
 	</target>
 
-	<target name="dist" depends="clean, jar, jar-doc" description="--> create distribution jar files" >
+	<target name="dist" depends="clean, test-report, jar-doc" description="--> create distribution jar files" >
 		<copy todir="${jar.dir}/lib">
 			<path refid="main.classpath" />
 		</copy>		
@@ -158,10 +158,19 @@
 		</junit>
 	</target>
 
+    <target name="test-report" depends="test" description="--> generates a test report.">
+        <junitreport todir="${report.dir}">
+            <fileset dir="${report.dir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${report.dir}" />
+        </junitreport>
+    </target>	
+	
 	<!-- ============================================================== -->
 	<!-- ============================ MAIN ============================ -->
 	<!-- ============================================================== -->
 
-	<target name="main" depends="dist,run" description="--> clean + tests + run"/>
+	<target name="main" depends="test,run" description="--> clean + tests + run"/>
 
 </project>
