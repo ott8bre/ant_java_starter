@@ -124,15 +124,9 @@
 	<!-- ============================================================== -->
 		
 	<target name="dist" depends="clean, test, jar-doc, jar-src" description="--> create distribution jar files" >
-		<copy todir="${dist.dir}/lib" overwrite="true" force="true">
+		<copy todir="${dist.dir}/lib" flatten="true" overwrite="true" force="true">
 			<path refid="main.classpath" />
 		</copy>		
-		
-		<copy todir="${dist.dir}/lib" flatten="true">
-		  <path>
-		    <pathelement path="${main.}"/>
-		  </path>
-		</copy>
 	</target>
 
 	
