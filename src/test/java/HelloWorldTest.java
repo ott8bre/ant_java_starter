@@ -5,7 +5,8 @@ import static org.junit.Assert.*;
 public class HelloWorldTest {
 
 	@Test
-	public void testExample() throws Exception {
+	public void testA() throws Exception {
 		assertEquals("Hello World", new HelloWorld().greet());
 	}
+	
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="HelloWorld" default="help">
-
+	
 	<!-- ============================================================== -->
 	<!-- =========================== USAGE ============================ -->
 	<!-- ============================================================== -->
@@ -25,9 +25,7 @@
 	<property name="test.src.dir" location="src/test/java" description="source test files directory" />
 	<property name="test.res.dir" location="src/test/resources" description="resources test files directory" />
 	
-	<property name="build.dir" location="build" description="building directory" />
 	<property name="classes.dir" location="${build.dir}/classes" />
-	<property name="jar.dir" location="${build.dir}/dist" />
 	<property name="tests.dir" location="${build.dir}/tests" />
 	<property name="report.dir"  value="${build.dir}/report"/>
 	<property name="doc.dir"  value="${build.dir}/doc"/>
@@ -38,7 +36,7 @@
 	<!-- ======================== CLASSPATH =========================== -->
 	<!-- ============================================================== -->
 
-	<path id="application" location="${jar.dir}/${ant.project.name}.jar" />
+	<path id="application" location="${dist.dir}/${ant.project.name}.jar" />
 
 	<path id="main.classpath">
 		<pathelement path="${log4j.lib}" />
@@ -58,7 +56,6 @@
 	<target name="clean" description="--> clean the project built files">
 		<delete dir="${build.dir}" />
 	</target>
-
 
 	<!-- ============================================================== -->
 	<!-- ========================= COMPILE ============================ -->
@@ -89,9 +86,9 @@
 	<!-- =========================== JARS ============================= -->
 	<!-- ============================================================== -->
 
-	<target name="jar" depends="compile-test" description="--> make a jar file for this project">
-		<mkdir dir="${jar.dir}" />
-		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+	<target name="jar" depends="compile" description="--> make a jar file for this project">
+		<mkdir dir="${dist.dir}" />
+		<jar destfile="${dist.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
 			<manifest>
 				<attribute name="Main-Class" value="${main-class}" />
 			</manifest>
@@ -113,21 +110,45 @@
 			<doctitle><![CDATA[<h1>${ant.project.name}</h1>]]></doctitle>
 			<bottom><![CDATA[<i>Copyright &#169; 2015 ${ant.project.name} All Rights Reserved.</i>]]></bottom>
 		  </javadoc>
-		<mkdir dir="${jar.dir}" />
-		<jar destfile="${jar.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
+		<mkdir dir="${dist.dir}" />
+		<jar destfile="${dist.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
 	</target>
 
 	<target name="jar-src" description="--> make a jar file for sources of this project">
-		<mkdir dir="${jar.dir}" />
-		<jar destfile="${jar.dir}/${ant.project.name}-sources.jar" basedir="${main.src.dir}" />	
+		<mkdir dir="${dist.dir}" />
+		<jar destfile="${dist.dir}/${ant.project.name}-sources.jar" basedir="${main.src.dir}" />	
 	</target>	
 	
-	<target name="dist" depends="clean, test-report, jar-doc, jar-src" description="--> create distribution jar files" >
-		<copy todir="${jar.dir}/lib">
+	<!-- ============================================================== -->
+	<!-- ============================ DIST ============================ -->
+	<!-- ============================================================== -->
+		
+	<target name="dist" depends="clean, test, jar-doc, jar-src" description="--> create distribution jar files" >
+		<copy todir="${dist.dir}/lib" overwrite="true" force="true">
 			<path refid="main.classpath" />
 		</copy>		
+		
+		<copy todir="${dist.dir}/lib" flatten="true">
+		  <path>
+		    <pathelement path="${main.}"/>
+		  </path>
+		</copy>
 	</target>
 
+	
+	<!-- ============================================================== -->
+	<!-- ========================== PUBLISH =========================== -->
+	<!-- ============================================================== -->
+		
+	<target name="publish" depends="clean, test" description="> publish the jar artifact">
+		<copy todir="${publish.dir}">
+			<fileset dir="${dist.dir}">
+				<exclude name="**/*sources.jar"/>
+				<exclude name="**/*javadoc.jar"/>
+			</fileset>
+		</copy>
+	</target>	
+	
 	<!-- ============================================================== -->
 	<!-- ============================ RUN ============================= -->
 	<!-- ============================================================== -->
@@ -145,9 +166,13 @@
 	<!-- ============================ TEST ============================ -->
 	<!-- ============================================================== -->
 
-	<target name="test" depends="jar" description="--> run tests">
+	<target name="test" depends="jar, compile-test" description="--> run tests">
 		<mkdir dir="${report.dir}"/>
-		<junit printsummary="yes" haltonfailure="yes">
+		<junit printsummary="on"
+	    	   fork="false"
+	           haltonfailure="false"
+	           failureproperty="tests.failed"
+	           showoutput="true">
 			<classpath>
 				<path location="${tests.dir}" />
 				<path refid="main.classpath" />
@@ -155,23 +180,29 @@
 				<path refid="application" />
 			</classpath>
 
-			<formatter type="plain"/>
 			<formatter type="xml"/>
 
 			<batchtest fork="yes" todir="${report.dir}">
 				<fileset dir="${test.src.dir}" includes="**/*Test*.java" />
 			</batchtest>
 		</junit>
-	</target>
-
-    <target name="test-report" depends="test" description="--> generates a test report.">
+		
         <junitreport todir="${report.dir}">
             <fileset dir="${report.dir}">
                 <include name="TEST-*.xml" />
             </fileset>
             <report format="frames" todir="${report.dir}" />
         </junitreport>
-    </target>	
+		
+	    <fail if="tests.failed">
+	    	tests.failed=${tests.failed}
+	        ***********************************************************
+	        ***********************************************************
+	        ****  One or more tests failed!  Check the output ...  ****
+	        ***********************************************************
+	        ***********************************************************
+	    </fail>
+	</target>
 	
 	<!-- ============================================================== -->
 	<!-- ============================ MAIN ============================ -->
