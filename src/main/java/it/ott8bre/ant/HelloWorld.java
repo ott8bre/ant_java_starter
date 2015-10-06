@@ -1,7 +1,6 @@
 package it.ott8bre.ant;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.BasicConfigurator;
 
 /**
  * An Ant HelloWorld Class
@@ -16,8 +15,7 @@ public class HelloWorld {
      * @param args
      */
     public static void main(String[] args) {
-        BasicConfigurator.configure();
-        logger.info(new HelloWorld().greet());          // the old SysO-statement
+        logger.info(new HelloWorld().greet());
     }
     
     public String greet(){
