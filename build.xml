@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="HelloWorld" default="help">
-	
+		
 	<!-- ============================================================== -->
 	<!-- =========================== USAGE ============================ -->
 	<!-- ============================================================== -->
@@ -12,7 +12,7 @@
 			<arg value="${ant.file}" />
 		</java>
 	</target>
-
+	
 	<!-- ============================================================== -->
 	<!-- ======================== PROPERTIES ========================== -->
 	<!-- ============================================================== -->
@@ -30,13 +30,30 @@
 	<property name="report.dir"  value="${build.dir}/report"/>
 	<property name="doc.dir"  value="${build.dir}/doc"/>
 
-	<property name="main-class" value="it.ott8bre.ant.HelloWorld" />
+	<property name="main.class" value="it.ott8bre.ant.HelloWorld" />
 
+	<!-- ============================================================== -->
+	<!-- ========================== SCM TAG =========================== -->
+	<!-- ============================================================== -->
+	
+	<target name="scm-tag" unless="version">
+        <exec executable="git" outputproperty="version" failifexecutionfails="false">
+            <arg value="describe"/>
+    		<arg value="--tags"/>
+        </exec>
+		<condition property="main.name" value="${ant.project.name}-${version}">
+			<isset property="version"/>
+		</condition>
+		
+		<property name="main.name" value="${ant.project.name}" />
+		
+		<path id="application" location="${dist.dir}/${main.name}.jar" />
+	</target>
+	
 	<!-- ============================================================== -->
 	<!-- ======================== CLASSPATH =========================== -->
 	<!-- ============================================================== -->
 
-	<path id="application" location="${dist.dir}/${ant.project.name}.jar" />
 
 	<path id="main.classpath">
 		<pathelement path="${log4j.lib}" />
@@ -86,16 +103,16 @@
 	<!-- =========================== JARS ============================= -->
 	<!-- ============================================================== -->
 
-	<target name="jar" depends="compile" description="--> make a jar file for this project">
+	<target name="jar" depends="compile, scm-tag" description="--> make a jar file for this project">
 		<mkdir dir="${dist.dir}" />
-		<jar destfile="${dist.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+		<jar destfile="${dist.dir}/${main.name}.jar" basedir="${classes.dir}">
 			<manifest>
-				<attribute name="Main-Class" value="${main-class}" />
+				<attribute name="Main-Class" value="${main.class}" />
 			</manifest>
 		</jar>
 	</target>
 
-	<target name="jar-doc" description="--> make a jar file for javadoc of this project">
+	<target name="jar-doc" depends="scm-tag" description="--> make a jar file for javadoc of this project">
 		<mkdir dir="${doc.dir}" />
 		<javadoc
 				destdir="${doc.dir}"
@@ -103,20 +120,20 @@
 		        version="true"
 		        use="true"
 				classpathref="main.classpath"
-			windowtitle="${ant.project.name}">
+			windowtitle="${main.name}">
 
 		    <packageset dir="${main.src.dir}" defaultexcludes="yes" />
 
-			<doctitle><![CDATA[<h1>${ant.project.name}</h1>]]></doctitle>
-			<bottom><![CDATA[<i>Copyright &#169; 2015 ${ant.project.name} All Rights Reserved.</i>]]></bottom>
+			<doctitle><![CDATA[<h1>${main.name}</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; 2015 ${main.name} All Rights Reserved.</i>]]></bottom>
 		  </javadoc>
 		<mkdir dir="${dist.dir}" />
-		<jar destfile="${dist.dir}/${ant.project.name}-javadoc.jar" basedir="${build.dir}/doc" />
+		<jar destfile="${dist.dir}/${main.name}-javadoc.jar" basedir="${build.dir}/doc" />
 	</target>
 
-	<target name="jar-src" description="--> make a jar file for sources of this project">
+	<target name="jar-src" depends="scm-tag" description="--> make a jar file for sources of this project">
 		<mkdir dir="${dist.dir}" />
-		<jar destfile="${dist.dir}/${ant.project.name}-sources.jar" basedir="${main.src.dir}" />	
+		<jar destfile="${dist.dir}/${main.name}-sources.jar" basedir="${main.src.dir}" />	
 	</target>	
 	
 	<!-- ============================================================== -->
@@ -134,7 +151,7 @@
 	<!-- ========================== PUBLISH =========================== -->
 	<!-- ============================================================== -->
 		
-	<target name="publish" depends="clean, test" description="> publish the jar artifact">
+	<target name="publish" depends="clean, test" description="--> publish the jar artifact">
 		<copy todir="${publish.dir}">
 			<fileset dir="${dist.dir}">
 				<exclude name="**/*sources.jar"/>
@@ -148,7 +165,7 @@
 	<!-- ============================================================== -->
 
 	<target name="run" depends="jar" description="--> run project jar">
-		<java fork="true" classname="${main-class}" dir="${build.dir}">
+		<java fork="true" classname="${main.class}" dir="${build.dir}">
 			<classpath>
 				<path refid="main.classpath" />
 				<path refid="application" />
