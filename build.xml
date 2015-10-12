@@ -78,9 +78,9 @@
 	<!-- ========================= COMPILE ============================ -->
 	<!-- ============================================================== -->
 
-	<target name="compile" description="--> compile the project">
+	<target name="compile" depends="clean" description="--> compile the project">
 		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${main.src.dir}" destdir="${classes.dir}" classpathref="main.classpath" />
+		<javac srcdir="${main.src.dir}" destdir="${classes.dir}" classpathref="main.classpath" debug="on" />
 		<copy todir="${classes.dir}">
 			<fileset dir="${main.res.dir}" />
 		</copy>
