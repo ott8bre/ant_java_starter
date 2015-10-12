@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="HelloWorld" default="help">
-		
+<project name="hello-world" default="help">
+
+	<property name="main.class" value="it.ott8bre.ant.HelloWorld" />
+
 	<!-- ============================================================== -->
 	<!-- =========================== USAGE ============================ -->
 	<!-- ============================================================== -->
@@ -12,7 +14,7 @@
 			<arg value="${ant.file}" />
 		</java>
 	</target>
-	
+
 	<!-- ============================================================== -->
 	<!-- ======================== PROPERTIES ========================== -->
 	<!-- ============================================================== -->
@@ -24,36 +26,34 @@
 
 	<property name="test.src.dir" location="src/test/java" description="source test files directory" />
 	<property name="test.res.dir" location="src/test/resources" description="resources test files directory" />
-	
+
 	<property name="classes.dir" location="${build.dir}/classes" />
 	<property name="tests.dir" location="${build.dir}/tests" />
 	<property name="report.dir"  value="${build.dir}/report"/>
 	<property name="doc.dir"  value="${build.dir}/doc"/>
 
-	<property name="main.class" value="it.ott8bre.ant.HelloWorld" />
-
 	<!-- ============================================================== -->
 	<!-- ========================== SCM TAG =========================== -->
 	<!-- ============================================================== -->
-	
+
 	<target name="scm-tag" unless="version">
         <exec executable="git" outputproperty="version" failifexecutionfails="false">
             <arg value="describe"/>
-    		<arg value="--tags"/>
+    				<arg value="--tags"/>
+    				<arg value="--abbrev=0"/>
         </exec>
 		<condition property="main.name" value="${ant.project.name}-${version}">
 			<isset property="version"/>
 		</condition>
-		
+
 		<property name="main.name" value="${ant.project.name}" />
-		
+
 		<path id="application" location="${dist.dir}/${main.name}.jar" />
 	</target>
-	
+
 	<!-- ============================================================== -->
 	<!-- ======================== CLASSPATH =========================== -->
 	<!-- ============================================================== -->
-
 
 	<path id="main.classpath">
 		<pathelement path="${log4j.lib}" />
@@ -65,7 +65,7 @@
         <pathelement path="${junit.lib}" />
         <pathelement path="${hamcrest.lib}" />
 	</path>
-	
+
 	<!-- ============================================================== -->
 	<!-- ========================== CLEAN ============================= -->
 	<!-- ============================================================== -->
@@ -133,33 +133,30 @@
 
 	<target name="jar-src" depends="scm-tag" description="--> make a jar file for sources of this project">
 		<mkdir dir="${dist.dir}" />
-		<jar destfile="${dist.dir}/${main.name}-sources.jar" basedir="${main.src.dir}" />	
-	</target>	
-	
+		<jar destfile="${dist.dir}/${main.name}-sources.jar" basedir="${main.src.dir}" />
+	</target>
+
 	<!-- ============================================================== -->
 	<!-- ============================ DIST ============================ -->
 	<!-- ============================================================== -->
-		
+
 	<target name="dist" depends="clean, test, jar-doc, jar-src" description="--> create distribution jar files" >
-		<copy todir="${dist.dir}/lib" flatten="true" overwrite="true" force="true">
-			<path refid="main.classpath" />
-		</copy>		
 	</target>
 
-	
+
 	<!-- ============================================================== -->
 	<!-- ========================== PUBLISH =========================== -->
 	<!-- ============================================================== -->
-		
-	<target name="publish" depends="clean, test" description="--> publish the jar artifact">
-		<copy todir="${publish.dir}">
+
+	<target name="publish" depends="clean, test" description="--> publish the jar artifact in the repo">
+		<copy todir="${repo.dir}">
 			<fileset dir="${dist.dir}">
 				<exclude name="**/*sources.jar"/>
 				<exclude name="**/*javadoc.jar"/>
 			</fileset>
 		</copy>
-	</target>	
-	
+	</target>
+
 	<!-- ============================================================== -->
 	<!-- ============================ RUN ============================= -->
 	<!-- ============================================================== -->
@@ -197,14 +194,14 @@
 				<fileset dir="${test.src.dir}" includes="**/*Test*.java" />
 			</batchtest>
 		</junit>
-		
+
         <junitreport todir="${report.dir}">
             <fileset dir="${report.dir}">
                 <include name="TEST-*.xml" />
             </fileset>
             <report format="frames" todir="${report.dir}" />
         </junitreport>
-		
+
 	    <fail if="tests.failed">
 	    	tests.failed=${tests.failed}
 	        ***********************************************************
@@ -214,7 +211,7 @@
 	        ***********************************************************
 	    </fail>
 	</target>
-	
+
 	<!-- ============================================================== -->
 	<!-- ============================ MAIN ============================ -->
 	<!-- ============================================================== -->
