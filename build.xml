@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="hello-world" default="help">
+<project name="hello-world" default="help" xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<property name="main.class" value="it.ott8bre.ant.HelloWorld" />
 
@@ -28,10 +28,33 @@
 	<property name="test.res.dir" location="src/test/resources" description="resources test files directory" />
 
 	<property name="classes.dir" location="${build.dir}/classes" />
-	<property name="tests.dir" location="${build.dir}/tests" />
-	<property name="report.dir"  value="${build.dir}/report"/>
+	<property name="tests.dir" location="${build.dir}/test-classes" />
+	<property name="report.dir"  value="${build.dir}/test-report"/>
 	<property name="doc.dir"  value="${build.dir}/doc"/>
+	<property name="ivy.reports.dir"  location="${build.dir}/ivy-reports"/>
 
+
+	<!-- ============================================================== -->
+	<!-- =========================== SETUP ============================ -->
+	<!-- ============================================================== -->
+		
+	<available classname="org.apache.ivy.Main" property="ivy.installed"/>	
+
+	<target name="install-ivy" unless="ivy.installed">
+        <mkdir dir="${user.home}/.ant/lib"/>
+        <get dest="${user.home}/.ant/lib/ivy.jar" src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.3.0/ivy-2.3.0.jar"/>
+        <fail message="Ivy has been installed. Run the build again"/>
+    </target>
+
+    <target name="resolve" depends="install-ivy" description="--> use ivy to resolve classpaths">
+        <ivy:resolve/>
+
+        <ivy:report todir='${ivy.reports.dir}' graph='false' xml='false'/>
+
+        <ivy:cachepath pathid="compile.path" conf="compile"/>
+        <ivy:cachepath pathid="test.path"    conf="test"/>
+    </target>	
+	
 	<!-- ============================================================== -->
 	<!-- ========================== SCM TAG =========================== -->
 	<!-- ============================================================== -->
@@ -39,8 +62,8 @@
 	<target name="scm-tag" unless="version">
         <exec executable="git" outputproperty="version" failifexecutionfails="false">
             <arg value="describe"/>
-    				<arg value="--tags"/>
-    				<arg value="--abbrev=0"/>
+			<arg value="--tags"/>
+			<arg value="--abbrev=0"/>
         </exec>
 		<condition property="main.name" value="${ant.project.name}-${version}">
 			<isset property="version"/>
@@ -52,51 +75,40 @@
 	</target>
 
 	<!-- ============================================================== -->
-	<!-- ======================== CLASSPATH =========================== -->
-	<!-- ============================================================== -->
-
-	<path id="main.classpath">
-		<pathelement path="${log4j.lib}" />
-	</path>
-
-	<path id="test.classpath">
-        <path refid="main.classpath" />
-        <pathelement path="${classes.dir}" />
-        <pathelement path="${junit.lib}" />
-        <pathelement path="${hamcrest.lib}" />
-	</path>
-
-	<!-- ============================================================== -->
 	<!-- ========================== CLEAN ============================= -->
 	<!-- ============================================================== -->
 
 	<target name="clean" description="--> clean the project built files">
 		<delete dir="${build.dir}" />
 	</target>
+	
+    <target name="clean-all" depends="clean" description="--> clean + purge ivy cache">
+        <ivy:cleancache/>
+    </target>
 
 	<!-- ============================================================== -->
 	<!-- ========================= COMPILE ============================ -->
 	<!-- ============================================================== -->
 
-	<target name="compile" depends="clean" description="--> compile the project">
+	<target name="compile" depends="clean,resolve" description="--> compile the project">
 		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${main.src.dir}" destdir="${classes.dir}" classpathref="main.classpath" debug="on" />
 		<copy todir="${classes.dir}">
 			<fileset dir="${main.res.dir}" />
 		</copy>
+		<javac srcdir="${main.src.dir}" destdir="${classes.dir}" classpathref="compile.path" debug="on" includeantruntime="false" />
 	</target>
 
 	<target name="compile-test" depends="compile" description="--> compile the project tests">
 		<mkdir dir="${tests.dir}" />
-		<javac srcdir="${test.src.dir}" destdir="${tests.dir}">
-			<classpath>
-				<path refid="test.classpath" />
-				<path location="${classes.dir}"/>
-			</classpath>
-		</javac>
 		<copy todir="${tests.dir}">
 			<fileset dir="${test.res.dir}" />
 		</copy>
+        <javac srcdir="${test.src.dir}" destdir="${tests.dir}" includeantruntime="false" debug="true">
+            <classpath>
+                <path refid="test.path"/>
+                <pathelement path="${classes.dir}"/>
+            </classpath>
+        </javac>
 	</target>
 
 	<!-- ============================================================== -->
@@ -105,21 +117,31 @@
 
 	<target name="jar" depends="compile, scm-tag" description="--> make a jar file for this project">
 		<mkdir dir="${dist.dir}" />
+		
+        <ivy:retrieve pattern="${dist.dir}/lib/[artifact]-[revision](-[classifier]).[ext]" conf="runtime"/>
+
+        <manifestclasspath property="jar.classpath" jarfile="${dist.dir}/${main.name}.jar">
+            <classpath>
+                <fileset dir="${dist.dir}/lib" includes="*.jar"/>
+            </classpath>
+        </manifestclasspath>
+
 		<jar destfile="${dist.dir}/${main.name}.jar" basedir="${classes.dir}">
-			<manifest>
-				<attribute name="Main-Class" value="${main.class}" />
-			</manifest>
-		</jar>
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}" />
+                <attribute name="Class-Path" value="${jar.classpath}" />
+            </manifest>
+        </jar>		
 	</target>
 
-	<target name="jar-doc" depends="scm-tag" description="--> make a jar file for javadoc of this project">
+	<target name="jar-doc" depends="resolve, scm-tag" description="--> make a jar file for javadoc of this project">
 		<mkdir dir="${doc.dir}" />
 		<javadoc
 				destdir="${doc.dir}"
 		        author="true"
 		        version="true"
 		        use="true"
-				classpathref="main.classpath"
+				classpathref="compile.path"
 			windowtitle="${main.name}">
 
 		    <packageset dir="${main.src.dir}" defaultexcludes="yes" />
@@ -145,11 +167,12 @@
 
 
 	<!-- ============================================================== -->
-	<!-- ========================== PUBLISH =========================== -->
+	<!-- ========================== INSTALL =========================== -->
 	<!-- ============================================================== -->
 
-	<target name="publish" depends="clean, test" description="--> publish the jar artifact in the repo">
-		<copy todir="${repo.dir}">
+	<target name="install" depends="clean, test" description="--> copy the artifact into install dir">
+		<mkdir dir="${install.dir}" />
+		<copy todir="${install.dir}">
 			<fileset dir="${dist.dir}">
 				<exclude name="**/*sources.jar"/>
 				<exclude name="**/*javadoc.jar"/>
@@ -162,12 +185,7 @@
 	<!-- ============================================================== -->
 
 	<target name="run" depends="jar" description="--> run project jar">
-		<java fork="true" classname="${main.class}" dir="${build.dir}">
-			<classpath>
-				<path refid="main.classpath" />
-				<path refid="application" />
-			</classpath>
-		</java>
+		<java jar="${dist.dir}/${main.name}.jar" fork="true"/>
 	</target>
 
 	<!-- ============================================================== -->
@@ -182,10 +200,9 @@
 	           failureproperty="tests.failed"
 	           showoutput="true">
 			<classpath>
-				<path location="${tests.dir}" />
-				<path refid="main.classpath" />
-				<path refid="test.classpath" />
-				<path refid="application" />
+                <path refid="test.path"/>
+                <pathelement path="${classes.dir}"/>
+                <pathelement path="${tests.dir}"/>				
 			</classpath>
 
 			<formatter type="xml"/>

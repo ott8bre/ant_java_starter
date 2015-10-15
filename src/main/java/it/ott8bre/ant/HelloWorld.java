@@ -1,6 +1,7 @@
 package it.ott8bre.ant;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An Ant HelloWorld Class
@@ -8,7 +9,7 @@ import org.apache.log4j.Logger;
  *
  */
 public class HelloWorld {
-    static Logger logger = Logger.getLogger(HelloWorld.class);
+    static final Logger logger = LoggerFactory.getLogger(HelloWorld.class);
 
     /**
      * a dummy main method
