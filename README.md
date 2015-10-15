@@ -10,7 +10,7 @@ A small project for playing with [Apache Ant™][1].
 `ant publish`
 
 ## Notes
-Requires *log4j* for running and *junit* for testing.
-Please configure *build.properties* file for jar locations.
+Uses [Apache Ivy™][2] as dependencies manager.
 
 [1]: https://ant.apache.org/
+[2]: https://ant.apache.org/ivy
