@@ -37,8 +37,8 @@
 	<!-- ============================================================== -->
 	<!-- =========================== SETUP ============================ -->
 	<!-- ============================================================== -->
-		
-	<available classname="org.apache.ivy.Main" property="ivy.installed"/>	
+
+	<available classname="org.apache.ivy.Main" property="ivy.installed"/>
 
 	<target name="install-ivy" unless="ivy.installed">
         <mkdir dir="${user.home}/.ant/lib"/>
@@ -53,8 +53,8 @@
 
         <ivy:cachepath pathid="compile.path" conf="compile"/>
         <ivy:cachepath pathid="test.path"    conf="test"/>
-    </target>	
-	
+    </target>
+
 	<!-- ============================================================== -->
 	<!-- ========================== SCM TAG =========================== -->
 	<!-- ============================================================== -->
@@ -81,7 +81,7 @@
 	<target name="clean" description="--> clean the project built files">
 		<delete dir="${build.dir}" />
 	</target>
-	
+
     <target name="clean-all" depends="clean" description="--> clean + purge ivy cache">
         <ivy:cleancache/>
     </target>
@@ -117,7 +117,7 @@
 
 	<target name="jar" depends="compile, scm-tag" description="--> make a jar file for this project">
 		<mkdir dir="${dist.dir}" />
-		
+
         <ivy:retrieve pattern="${dist.dir}/lib/[artifact]-[revision](-[classifier]).[ext]" conf="runtime"/>
 
         <manifestclasspath property="jar.classpath" jarfile="${dist.dir}/${main.name}.jar">
@@ -131,7 +131,7 @@
                 <attribute name="Main-Class" value="${main.class}" />
                 <attribute name="Class-Path" value="${jar.classpath}" />
             </manifest>
-        </jar>		
+        </jar>
 	</target>
 
 	<target name="jar-doc" depends="resolve, scm-tag" description="--> make a jar file for javadoc of this project">
@@ -185,7 +185,7 @@
 	<!-- ============================================================== -->
 
 	<target name="run" depends="jar" description="--> run project jar">
-		<java jar="${dist.dir}/${main.name}.jar" fork="true"/>
+		<java jar="${dist.dir}/${main.name}.jar" fork="true" dir="${build.dir} />
 	</target>
 
 	<!-- ============================================================== -->
@@ -202,7 +202,7 @@
 			<classpath>
                 <path refid="test.path"/>
                 <pathelement path="${classes.dir}"/>
-                <pathelement path="${tests.dir}"/>				
+                <pathelement path="${tests.dir}"/>
 			</classpath>
 
 			<formatter type="xml"/>

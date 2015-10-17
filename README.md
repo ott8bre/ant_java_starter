@@ -1,13 +1,12 @@
 # Ant Java Starter Project
 A small project for playing with [Apache Ant™][1].
 
-## Useful Targets
+## How to
 
-`ant main`
-
-`ant dist`
-
-`ant publish`
+- show available targets > `ant help` or simply `ant`
+- build and run project > `ant main`
+- creates project distribution > `ant dist`
+- install project artifact > `ant install`
 
 ## Notes
 Uses [Apache Ivy™][2] as dependencies manager.
