@@ -1,4 +1,7 @@
-import it.ott8bre.ant.HelloWorld;
+package it.ott8bre;
+
+import it.ott8bre.HelloWorld;
+
 import org.junit.*;
 import static org.junit.Assert.*;
 
