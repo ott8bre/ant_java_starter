@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="hello-world" default="help" xmlns:ivy="antlib:org.apache.ivy.ant">
 
-	<property name="main.class" value="it.ott8bre.ant.HelloWorld" />
+	<property name="main.class" value="it.ott8bre.HelloWorld" />
 
 	<!-- ============================================================== -->
 	<!-- =========================== USAGE ============================ -->
@@ -185,7 +185,7 @@
 	<!-- ============================================================== -->
 
 	<target name="run" depends="jar" description="--> run project jar">
-		<java jar="${dist.dir}/${main.name}.jar" fork="true" dir="${build.dir} />
+		<java jar="${dist.dir}/${main.name}.jar" fork="true" dir="${build.dir}" />
 	</target>
 
 	<!-- ============================================================== -->
@@ -228,7 +228,7 @@
 	        ***********************************************************
 	    </fail>
 	</target>
-
+		
 	<!-- ============================================================== -->
 	<!-- ============================ MAIN ============================ -->
 	<!-- ============================================================== -->
